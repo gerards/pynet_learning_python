@@ -4,7 +4,7 @@
 Pynet Learning Python Week 5 Q1
 
 Parse the CDP data (see link above) to obtain the following information:
-- hostname
+- remote_hostname
 - ip_addr
 - model
 - vendor
@@ -25,6 +25,8 @@ network_devices = {
  }
 
 '''
+
+import pprint
 
 
 SW1_SHOW_CDP_NEIGHBORS = '''
@@ -336,7 +338,6 @@ SHOW_CDP_NEIGHBORS_DETAIL_LIST = (SW1_SHOW_CDP_NEIGHBORS_DETAIL, R2_SHOW_CDP_NEI
                                   R3_SHOW_CDP_NEIGHBORS_DETAIL, R1_SHOW_CDP_NEIGHBORS_DETAIL, \
                                   R4_SHOW_CDP_NEIGHBORS_DETAIL, R5_SHOW_CDP_NEIGHBORS_DETAIL,)
 
-DEBUG = False
 
 def main():
     '''
@@ -345,45 +346,41 @@ def main():
 
     network_devices = {}
 
-    outer_cnt = 0
     for neighbor in SHOW_CDP_NEIGHBORS_DETAIL_LIST:
-        outer_cnt += 1
-        if DEBUG:
-            print("Outer loop count start : " + str(outer_cnt))
-        inner_cnt = 0
+        local_hostname = ""
         for line in neighbor.split("\n"):
-            inner_cnt += 1
-            if DEBUG:
-                print("----Inner loop count start : " + str(inner_cnt))
+            if "show cdp neighbors detail" in line:
+                local_hostname = line.split(">")[0]
+                if not local_hostname in network_devices:
+                    network_devices[local_hostname] = {}
             if "Device ID:" in line:
-                hostname = line.split(": ")[1]
-                if hostname in network_devices:
-                    if DEBUG:
-                        print("---- CONTINE : Inner cnt " + str(inner_cnt))
-                    continue
+                remote_hostname = line.split(": ")[1]
+                if not remote_hostname in network_devices:
+                    network_devices[remote_hostname] = {}
+
+                if not "adjacent_devices" in network_devices[local_hostname]:
+                    network_devices[local_hostname]["adjacent_devices"] = [remote_hostname]
                 else:
-                    network_devices[hostname] = {}
+                    network_devices[local_hostname]["adjacent_devices"].append(remote_hostname)
+
             if "IP address:" in line:
                 ip_addr = line.split(": ")[1]
-                network_devices[hostname]["IP"] = ip_addr
+                network_devices[remote_hostname]["IP"] = ip_addr
+
             if "Platform:" in line:
                 temp_list = line.split(", ")
                 vendor = temp_list[0].split(" ")[1]
                 model = temp_list[0].split(" ")[2]
                 temp_list = temp_list[1].strip()
                 device_type = temp_list.split(" ")[1]
-                network_devices[hostname]["vendor"] = vendor
-                network_devices[hostname]["model"] = model
-                network_devices[hostname]["device_type"] = device_type
-            if DEBUG:
-                print("----Inner loop count end : " + str(inner_cnt))
-        if DEBUG:
-            print("Outer loop count end : " + str(outer_cnt))
 
-    for device in network_devices:
-        print("\n" + device)
-        for key in network_devices[device]:
-            print(key, network_devices[device][key])
+                network_devices[remote_hostname]["vendor"] = vendor
+                network_devices[remote_hostname]["model"] = model
+                network_devices[remote_hostname]["device_type"] = device_type
+
+    print("\n")
+    pprint.pprint(network_devices)
+    print("\n")
 
 if __name__ == '__main__':
     main()
