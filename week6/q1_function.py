@@ -11,7 +11,7 @@ def number_sum(num1=1, num2=1, num3=1):
     return num1 + num2 + num3
 
 def main():
-    " main ! "
+    " main "
     print(number_sum())
 
 if __name__ == '__main__':
