@@ -22,6 +22,7 @@ def main():
         output[ip_prefix] = as_path
 
     print("%-20s%-60s" % ("ip_prefix", "as_path"))
+
     for key, value in output.items():
         print("%-20s%-60s" % (key, value))
 
